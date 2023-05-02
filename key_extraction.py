@@ -12,8 +12,8 @@ import torch #pytorch
 class keywordExtractor: # Encoder 기반 모델을 활용해 문서 정보의 핵심 키워드를 추출하는 클래스
 	# model: Encoder 기반 언어모델을 사용, 기본 값으로 "monologg/koelectra-base-v3-discriminator" 사용
 	# tokenizer: 해당 모델에 맞는 토크나이저 사용
-    # dir: 영어 단어 -> 한국어 단어 또는 오탈자 -> 정상 단어로 변환하기 위해 사용하는 파일 로드
-        # ex) python -> 파이썬 || 파이선 -> 파이썬
+    	# dir: 영어 단어 -> 한국어 단어 또는 오탈자 -> 정상 단어로 변환하기 위해 사용하는 파일 로드
+        	# ex) python -> 파이썬 || 파이선 -> 파이썬
 
 	def __init__(self, model=None, tokenizer=None, dir: str = None) -> None:
 		## 언어모델 및 형태소분석기 불러오기
@@ -43,7 +43,7 @@ class keywordExtractor: # Encoder 기반 모델을 활용해 문서 정보의 �
 
 
 	def extract_keyword_list(self, doc: pd.Series, min_count: int = 3, min_length: int = 2) -> List:
-        ## min_count 이상인 집계, 단어 길이 min_length 이상인 단어 수집
+        	## min_count 이상인 집계, 단어 길이 min_length 이상인 단어 수집
 		# doc : 도서정보
 		# min_count : 문장 내 최소 출현 빈도
 		# min_length : 단어의 최소 길이 min_length = 2 설정 시 한 글자인 단어 제거
@@ -60,7 +60,7 @@ class keywordExtractor: # Encoder 기반 모델을 활용해 문서 정보의 �
 		series = series.drop(["title", "isbn13"])
 	
 	def _extract_keywords(self, words: List[str]) -> List[List[str]]:
-        ## 연결된 str을 형태소 분석하여 한글 명사 및 영단어 추출
+        	## 연결된 str을 형태소 분석하여 한글 명사 및 영단어 추출
 		tokenized_words = self.noun_extractor.tokenize(" ".join(words)) 
 		return [word.form for word in tokenized_words if word.tag in ("NNG", "NNP", "SL")] # 한글명사 (NNG,NNP), 영단어(SL)
 

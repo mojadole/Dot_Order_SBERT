@@ -52,7 +52,7 @@ def obtain_data(menu_name):
 
     """menu_name = "라면"
     chat_res_cat = "면"
-    chat_res_des = "라면은 말이죠"""
+    chat_res_des = '라면은 말이죠'"""
 
     #menu_str = menu_name + " " + chat_res_cat + " " + chat_res_des
     menu_str = menu_name + " " + chat_res_des
@@ -72,13 +72,13 @@ def get_keyword_list(menu_name):
     result = list(filter(lambda x: len(x) >= min_length, refined_keyword_list))
     return (result)
 
-# 인덱스 번호 -> 기존 메뉴들 키워드 리스트 가져오기
+# 인덱스 번호 -> 기존 메뉴들 키워드 리스트 가져오기 (지금은 사용 X)
 def get_keyword_idx(num):
     min_count = 2
     min_length = 1
 
     doc = scraping_result.iloc[num]
-    
+  
     raw_data = _convert_series_to_list_in_main(doc)
     keyword_list = key._extract_keywords(raw_data)
     translated_keyword_list = key._map_english_to_korean(keyword_list)
@@ -92,13 +92,14 @@ def init_function():
     food_keyword = []
 
     for i in range(len(scraping_result)):
-        food_name.append(scraping_result.iloc[i].food_name)
-        food_keyword.append(get_keyword_idx(i))
+        docs_keywords = extract_keyword_in_main(scraping_result.iloc[[i]])
+        food_name.append(docs_keywords["food_name"][0])
+        food_keyword.append(docs_keywords["keywords"][0])
 
     return [food_name, food_keyword]
 
 # 메뉴 검색하는 함수
-def search_menu(menu_name, food_name, food_keyword):
+def search_menu(menu_name, food_name_list, food_keyword_list):
     search = get_keyword_list(menu_name) # 입력된 메뉴에서 키워드 추출
 
     """# 키워드 확장 
@@ -109,11 +110,11 @@ def search_menu(menu_name, food_name, food_keyword):
 
     # 키워드와 유사한 도서 검색 
 
-    user_point = [int(0)] * len(food_name)
+    user_point = [int(0)] * len(food_name_list)
 
     for search_key in search:
-        for i in range(len(food_name)):
-            if search_key in food_keyword[i]:
+        for i in range(len(food_name_list)):
+            if search_key in food_keyword_list[i]:
                 user_point[i] = user_point[i] + int(1)
 
     #total_point = (user_point * 3) + recommand_point
@@ -121,10 +122,10 @@ def search_menu(menu_name, food_name, food_keyword):
     top_k_idx = np.argsort(total_point)[::-1][:20]
 
     # 메뉴명 연관 점수 저장
-    food_name = np.array(food_name)
+    food_name_list = np.array(food_name_list)
     total_point = np.array(total_point)
 
-    result  = dict(zip(food_name[top_k_idx], total_point[top_k_idx]))
+    result  = dict(zip(food_name_list[top_k_idx], total_point[top_k_idx]))
 
     # 음식 정보 추출
     food_info = pd.read_csv('data/food_data.csv',encoding='cp949')
@@ -167,6 +168,22 @@ def create_doc_embedding_in_main(doc: pd.Series) -> torch.Tensor:
 def _convert_series_to_str_in_main(series: pd.Series) -> str:
 	return " ".join(list(series.values))
 
+def extract_keyword_in_main(docs: pd.DataFrame) -> Dict:
+
+	keyword_embedding = map(lambda x: create_keyword_embedding_in_main(x[1]), docs.iterrows())
+	doc_embedding = map(lambda x: create_doc_embedding_in_main(x[1]), docs.iterrows())
+	keyword_list = map(lambda x: extract_keyword_list_in_main(x[1]), docs.iterrows())
+
+	co_sim_score = map(
+		lambda x: key._calc_cosine_similarity(*x).flatten(),
+		zip(doc_embedding, keyword_embedding),
+	)
+	top_n_keyword = list(
+		map(lambda x: key._filter_top_n_keyword(*x), zip(keyword_list, co_sim_score))
+	)
+
+	return dict(food_name=docs["food_name"].tolist(), keywords=top_n_keyword)
+
 
 ##################################### 전체 알고리즘 #####################################
 
@@ -174,11 +191,11 @@ menu_name = "라면" ## 입력
 
 lst = []
 
-food_name, food_keyword = init_function() #
+food_name_list, food_keyword_list = init_function() #
 
 
 print('\n\n\n키워드에 따른 상위 20개 음식 추천 결과\n')
-print(search_menu(menu_name, food_name, food_keyword))
+print(search_menu(menu_name, food_name_list, food_keyword_list))
 
 """if menu_name in food_name:
     print("일치하는 메뉴가 있습니다.")

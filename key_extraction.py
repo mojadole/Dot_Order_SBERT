@@ -40,28 +40,6 @@ class keywordExtractor: # Encoder 기반 모델을 활용해 문서 정보의 �
 		kor_words = self.eng_kor_df
 		for val in kor_words.kor.values:
 			self.noun_extractor.add_user_word(val)
-
-	# 이거 말고 main에 있는 함수 사용
-	def extract_keyword_list(self, doc: pd.Series, min_count: int = 3, min_length: int = 2) -> List:
-        ## min_count 이상인 집계, 단어 길이 min_length 이상인 단어 수집
-		# doc : 도서정보
-		# min_count : 문장 내 최소 출현 빈도
-		# min_length : 단어의 최소 길이 min_length = 2 설정 시 한 글자인 단어 제거
-
-		raw_data = self._convert_series_to_list(doc) # doc 리스트 변환 
-		keyword_list = self._extract_keywords(raw_data) # 키워드 리스트 추출
-		translated_keyword_list = self._map_english_to_korean(keyword_list) #추출된 리스트 한글로 번역
-		refined_keyword_list = self._eliminate_min_count_words(translated_keyword_list, min_count) # min_count 조건에 맞지 않는 단어 제거
-		return list(filter(lambda x: len(x) >= min_length, refined_keyword_list)) # lamda -> min_length 보다 작은 단어 제거, 추출된 키워드 리스트 반환
-
-	# 이거 말고 main에 있는 함수 사용
-	def _convert_series_to_list(self, series: pd.Series) -> List[List[str]]:
-		## series에 속한 값을 하나의 str으로 연결
-		book_title = series["food_name"] ##
-        #series = series.drop(["title", "isbn13"])
-		series = series.drop(["food_name"]) #
-		raw_data = [book_title] + list(chain(*series.values))
-		return list(chain(*map(lambda x: x.split(), raw_data)))
 	
 	def _extract_keywords(self, words: List[str]) -> List[List[str]]:
         	## 연결된 str을 형태소 분석하여 한글 명사 및 영단어 추출
@@ -83,15 +61,6 @@ class keywordExtractor: # Encoder 기반 모델을 활용해 문서 정보의 �
 		## min_count 이상으로 집계되지 않은 단어 제거
 		refined_kor_words = filter(lambda x: x[1] >= min_count, Counter(candidate_keyword).items())
 		return list(map(lambda x: x[0], refined_kor_words))
-
-	# 이거 말고 main에 있는 함수 사용
-	def create_keyword_embedding(self, doc: pd.Series) -> torch.Tensor:
-		## keyword embedding 생성 
-		# doc : pd.Series 데이터
-
-		keyword_list = self.extract_keyword_list(doc) # doc에서 키워드 리스트 추출
-		tokenized_keyword = self.tokenize_keyword(keyword_list) # 토큰화
-		return self._create_keyword_embedding(tokenized_keyword)
 
 	def tokenize_keyword(self, text: Union[list[str], str], max_length=128) -> Dict: # max_length (기본값 -> 128)
 		## 텍스트와 최대 길이를 입력 받아 텍스트를 토크나이저하고 딕셔너리 형태로 반환
@@ -165,20 +134,6 @@ class keywordExtractor: # Encoder 기반 모델을 활용해 문서 정보의 �
 		# Mean Pooling
 		mean_pooling = sum_embeddings / total_num_of_tokens
 		return mean_pooling
-
-	# 이거 말고 main에 있는 함수 사용
-	def create_doc_embedding(self, doc: pd.Series) -> torch.Tensor:
-		## sbert를 활용해 doc_embedding 생성
-		stringified_doc = self._convert_series_to_str(doc)
-		tokenized_doc = self.tokenize_keyword(stringified_doc)
-		return self._create_doc_embedding(tokenized_doc)
-
-	# 이거 말고 main에 있는 함수 사용
-	def _convert_series_to_str(self, series: pd.Series) -> str:
-		## Series에 속한 값을 하나의 str으로 연결
-		book_title = series["title"]
-		series = series.drop(["title", "isbn13"]) 
-		return book_title + " " + " ".join(list(chain(*series.values)))
 
 	def _create_doc_embedding(self, tokenized_doc: Union[list[str], str]) -> torch.Tensor:
 		## sbert를 활용해 doc_embedding 생성

@@ -7,6 +7,7 @@ from itertools import chain, islice
 import torch
 import openai
 from gensim.models import keyedvectors
+import pickle
 
 # load model and tokenizer
 name = "monologg/koelectra-base-v3-discriminator"
@@ -205,8 +206,11 @@ menu_name = "라면" ## 입력
 
 lst = []
 
-food_name_list, food_keyword_list = init_function() #
+with open("food_name_data.pickle","rb") as fr:
+    food_name_list = pickle.load(fr)
 
+with open("food_keyword_data.pickle","rb") as fr:
+    food_keyword_list = pickle.load(fr)
 
 print('\n\n\n키워드에 따른 상위 20개 음식 추천 결과\n')
 print(search_menu(menu_name, food_name_list, food_keyword_list))

@@ -17,7 +17,8 @@ tokenizer = ElectraTokenizerFast.from_pretrained(name)
 key = keywordExtractor(model,tokenizer,dir='data/preprocess/eng_han.csv')
 
 # load food data
-scraping_result = pd.read_csv('data/food_data.csv',encoding='cp949')
+#scraping_result = pd.read_csv('data/food_data.csv',encoding='cp949')
+scraping_result = pd.read_csv('data/food_data2.csv')
 
 
 ##################################### 따로 만든 함수 #####################################
@@ -48,11 +49,11 @@ def obtain_data(menu_name):
     #chat_res_cat = callChatGPT(menu_name + " 는 [밥], [국], [면], [분식] 중에 뭐야")
     #chat_res_cat = chat_res_cat[chat_res_cat.find('[')+1:chat_res_cat.find(']')] # GPT 답변 : 메뉴 카테고리
 
-    chat_res_des = callChatGPT(menu_name + "한줄 설명") # GPT 답변 : 메뉴 설명
+    #chat_res_des = callChatGPT(menu_name + "한줄 설명") # GPT 답변 : 메뉴 설명
 
-    """menu_name = "라면"
+    menu_name = "라면"
     chat_res_cat = "면"
-    chat_res_des = '라면은 말이죠'"""
+    chat_res_des = '라면은 말이죠'
 
     #menu_str = menu_name + " " + chat_res_cat + " " + chat_res_des
     menu_str = menu_name + " " + chat_res_des
@@ -102,11 +103,13 @@ def init_function():
 def search_menu(menu_name, food_name_list, food_keyword_list):
     search = get_keyword_list(menu_name) # 입력된 메뉴에서 키워드 추출
 
-    """# 키워드 확장 
+    w2v_model = keyedvectors.load_word2vec_format('data/w2v2')
+
+    # 키워드 확장 
     recommand_keyword = w2v_model.most_similar(positive=search, topn=15)
     np_recommand_keyword = np.array(list(map(lambda x: x[0], recommand_keyword)))
     print('W2V을 활용한 키워드 확장 :', np_recommand_keyword)
-    print('')"""
+    print('')
 
     # 키워드와 유사한 도서 검색 
 

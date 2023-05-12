@@ -120,8 +120,19 @@ def search_menu(menu_name, food_name_list, food_keyword_list):
             if search_key in food_keyword_list[i]:
                 user_point[i] = user_point[i] + int(1)
 
-    #total_point = (user_point * 3) + recommand_point
-    total_point = user_point
+
+    recommand_point = [int(0)] * len(food_name_list)
+
+    for search_key in np_recommand_keyword:
+        for i in range(len(food_name_list)):
+            
+            if search_key in food_keyword_list[i]:
+                recommand_point[i] = recommand_point[i] + int(1)
+
+    total_point = [int(0)] * len(user_point)
+    for i in range(len(user_point)):
+        total_point[i] = (user_point[i] * 3) + recommand_point[i]
+
     top_k_idx = np.argsort(total_point)[::-1][:20]
 
     # 메뉴명 연관 점수 저장

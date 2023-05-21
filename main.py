@@ -18,8 +18,8 @@ tokenizer = ElectraTokenizerFast.from_pretrained(name)
 key = keywordExtractor(model,tokenizer,dir='data/preprocess/eng_han.csv')
 
 # load food data
-#scraping_result = pd.read_csv('data/food_data.csv',encoding='cp949')
-scraping_result = pd.read_csv('data/food_data2.csv')
+scraping_result = pd.read_csv('data/food_data.csv',encoding='cp949')
+#scraping_result = pd.read_csv('data/food_data2.csv')
 
 
 ##################################### 따로 만든 함수 #####################################
@@ -50,11 +50,13 @@ def obtain_data(menu_name):
     #chat_res_cat = callChatGPT(menu_name + " 는 [밥], [국], [면], [분식] 중에 뭐야")
     #chat_res_cat = chat_res_cat[chat_res_cat.find('[')+1:chat_res_cat.find(']')] # GPT 답변 : 메뉴 카테고리
 
-    #chat_res_des = callChatGPT(menu_name + "한줄 설명") # GPT 답변 : 메뉴 설명
+    chat_res_des = callChatGPT("음식 " + menu_name + "에 대한 간단한 설명") # GPT 답변 : 메뉴 설명
 
-    menu_name = "라면"
+    print(chat_res_des)
+
+    """menu_name = "라면"
     chat_res_cat = "면"
-    chat_res_des = '라면은 말이죠'
+    chat_res_des = '라면은 아시아에서 유명한 인스턴트 면 요리로, 면과 스프로 구성됩니다. 면은 탄력이 있고 쫄깃하며, 다양한 모양과 두께로 제작됩니다. 스프는 라면의 맛을 결정짓는 중요한 재료로, 다양한 맛과 종류가 있습니다. 라면은 추가 재료로 고기, 해산물, 채소, 계란 등을 넣어 풍부하고 맛있게 즐길 수 있습니다. 라면은 전 세계적으로 인기 있는 음식으로, 맛과 편리함으로 알려져 있습니다.'"""
 
     #menu_str = menu_name + " " + chat_res_cat + " " + chat_res_des
     menu_str = menu_name + " " + chat_res_des
@@ -104,13 +106,13 @@ def init_function():
 def search_menu(menu_name, food_name_list, food_keyword_list):
     search = get_keyword_list(menu_name) # 입력된 메뉴에서 키워드 추출
 
-    w2v_model = keyedvectors.load_word2vec_format('data/w2v2')
+    """w2v_model = keyedvectors.load_word2vec_format('data/w2v2')
 
     # 키워드 확장 
     recommand_keyword = w2v_model.most_similar(positive=search, topn=15)
     np_recommand_keyword = np.array(list(map(lambda x: x[0], recommand_keyword)))
     print('W2V을 활용한 키워드 확장 :', np_recommand_keyword)
-    print('')
+    print('')"""
 
     # 키워드와 유사한 도서 검색 
 
@@ -122,7 +124,7 @@ def search_menu(menu_name, food_name_list, food_keyword_list):
                 user_point[i] = user_point[i] + int(1)
 
 
-    recommand_point = [int(0)] * len(food_name_list)
+    """recommand_point = [int(0)] * len(food_name_list)
 
     for search_key in np_recommand_keyword:
         for i in range(len(food_name_list)):
@@ -132,8 +134,10 @@ def search_menu(menu_name, food_name_list, food_keyword_list):
 
     total_point = [int(0)] * len(user_point)
     for i in range(len(user_point)):
-        total_point[i] = (user_point[i] * 3) + recommand_point[i]
+        total_point[i] = (user_point[i] * 3) + recommand_point[i]"""
+    
 
+    total_point = user_point
     top_k_idx = np.argsort(total_point)[::-1][:20]
 
     # 메뉴명 연관 점수 저장
@@ -202,7 +206,7 @@ def extract_keyword_in_main(docs: pd.DataFrame) -> Dict:
 
 ##################################### 전체 알고리즘 #####################################
 
-menu_name = "라면" ## 입력
+menu_name = "참치김밥" ## 입력
 
 lst = []
 
@@ -212,17 +216,17 @@ with open("data/food_name_data.pickle","rb") as fr:
 with open("data/food_keyword_data.pickle","rb") as fr:
     food_keyword_list = pickle.load(fr)
 
-print('\n\n\n키워드에 따른 상위 20개 음식 추천 결과\n')
-print(search_menu(menu_name, food_name_list, food_keyword_list))
+"""print('\n\n\n키워드에 따른 상위 20개 음식 추천 결과\n')
+print(search_menu(menu_name, food_name_list, food_keyword_list))"""
 
-"""if menu_name in food_name:
+if menu_name in food_name_list:
     print("일치하는 메뉴가 있습니다.")
     lst.append(menu_name)
 
 else :
-    search_menu(menu_name, food_name, food_keyword)
+    lst.append(search_menu(menu_name, food_name_list, food_keyword_list))
 
 if len(lst) == 0:
     print("해당 메뉴가 없습니다.")
 else:
-    print(lst)"""
+    print(lst)
